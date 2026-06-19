@@ -1,0 +1,90 @@
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100svh;
+    /* Room for the fixed BottomNav */
+    padding-bottom: 130px;
+    overflow-x: hidden;
+  }
+
+  /* ── Diamond grid pattern ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='40' viewBox='0 0 80 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 0 L80 20 L40 40 L0 20 Z' fill='none' stroke='rgba(80%2C144%2C255%2C0.14)' stroke-width='0.8'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Ambient glow orbs ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 80% 55% at 115% 0%,
+        rgba(0, 238, 255, 0.13) 0%,
+        rgba(0, 238, 255, 0.04) 50%,
+        transparent 85%
+      ),
+      radial-gradient(
+        ellipse 90% 75% at -15% 105%,
+        rgba(80, 144, 255, 0.11) 0%,
+        rgba(80, 144, 255, 0.03) 55%,
+        transparent 88%
+      ),
+      radial-gradient(ellipse 50% 40% at 50% 42%, rgba(255, 208, 0, 0.04) 0%, transparent 75%);
+    animation: bg-drift 22s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bg-drift {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(3%, -4%);
+    }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+}

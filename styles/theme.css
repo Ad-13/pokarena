@@ -1,0 +1,63 @@
+@theme {
+  /* ── Fonts ── */
+  --font-display: "Baloo 2", sans-serif;
+  --font-body:    "Inter", sans-serif;
+
+  /* ── Background layers ── */
+  --color-bg:       #0C1A2E;
+  --color-surface:  #132240;
+  --color-card:     #162850;
+  --color-raised:   #1C2F5C;
+
+  /* ── Borders ── */
+  --color-border:   rgba(255, 255, 255, 0.08);
+  --color-border-2: rgba(255, 255, 255, 0.16);
+
+  /* ── Text ── */
+  --color-text:       #FFFFFF;
+  --color-text-muted: rgba(255, 255, 255, 0.58);
+  --color-text-dim:   rgba(255, 255, 255, 0.25);
+
+  /* ── Accent (yellow) ── */
+  --color-accent:      #FFD000;
+  --color-accent-2:    #FFE44D;
+  --color-accent-soft: rgba(255, 208, 0, 0.10);
+
+  /* ── Blue / Cyan ── */
+  --color-blue:      #5090FF;
+  --color-blue-dark: #3D78FF;
+  --color-cyan:      #00EEFF;
+  --color-blue-soft: rgba(80, 144, 255, 0.12);
+
+  /* ── Feedback colours ── */
+  --color-error:        #FF6B6B;
+  --color-error-soft:   rgba(255, 107, 107, 0.12);
+  --color-success:      #4ADE80;
+  --color-success-soft: rgba(74, 222, 128, 0.12);
+
+  /* ── Border radii ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* ── Pokemon type colours ── */
+  --color-type-fire:     #FF7043;
+  --color-type-water:    #42B0F5;
+  --color-type-grass:    #66BB6A;
+  --color-type-electric: #FFD740;
+  --color-type-ghost:    #AB82FF;
+  --color-type-normal:   #BCAAA4;
+  --color-type-flying:   #81D4FA;
+  --color-type-fighting: #FF8A65;
+  --color-type-psychic:  #F48FB1;
+  --color-type-dragon:   #7E57C2;
+  --color-type-ice:      #80DEEA;
+  --color-type-poison:   #CE93D8;
+  --color-type-ground:   #FFCC80;
+  --color-type-rock:     #BCAAA4;
+  --color-type-bug:      #C5E1A5;
+  --color-type-dark:     #90A4AE;
+  --color-type-steel:    #B0BEC5;
+  --color-type-fairy:    #F48FB1;
+}
