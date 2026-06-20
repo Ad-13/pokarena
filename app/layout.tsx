@@ -1,4 +1,7 @@
 import type { Metadata } from 'next'
+import { getSession } from '@/actions/auth'
+import { AuthModalProvider } from '@/contexts/AuthContext'
+import BottomNav from '@/components/layout/BottomNav'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -6,17 +9,17 @@ export const metadata: Metadata = {
   description: 'Build your team. Become the Champion.',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession()
+  const rosterCount = 0
+
   return (
-    <html lang='en'>
-      <body className='flex flex-col min-h-svh'>
-        <main className='flex-1 relative z-10'>
-          {children}
-        </main>
+    <html lang="en">
+      <body className="flex flex-col min-h-svh">
+        <AuthModalProvider session={session}>
+          <main className="flex-1 relative z-10">{children}</main>
+          <BottomNav rosterCount={rosterCount} />
+        </AuthModalProvider>
       </body>
     </html>
   )

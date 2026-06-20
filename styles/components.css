@@ -1,10 +1,10 @@
 @layer components {
-  /* ── Layout ── */
+  /* Layout */
   .page-container {
     @apply max-w-6xl mx-auto px-4 md:px-8;
   }
 
-  /* ── Pokeball logo animations ── */
+  /* Pokeball logo animations */
   .pokeball-idle {
     animation: pokeball-idle 6s ease-in-out infinite;
     filter: drop-shadow(0 0 8px rgba(255, 208, 0, 0.4));
@@ -40,7 +40,7 @@
     }
   }
 
-  /* ── Buttons ── */
+  /* Buttons */
   .btn-primary {
     @apply inline-flex items-center gap-2 whitespace-nowrap
            cursor-pointer transition-all duration-150;
@@ -125,9 +125,9 @@
     background-color: rgba(255, 255, 255, 0.05);
   }
 
-  /* ── Input ── */
+  /* Input */
   .input-field {
-    @apply w-full transition-all duration-150;
+    width: 100%;
     padding: 0.7rem 1rem;
     background-color: rgba(255, 255, 255, 0.05);
     border: 1.5px solid var(--color-border);
@@ -135,6 +135,15 @@
     color: var(--color-text);
     font-size: 0.875rem;
     outline: none;
+    transition: none;
+  }
+  .input-field:-webkit-autofill,
+  .input-field:-webkit-autofill:hover,
+  .input-field:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px rgba(22, 40, 80, 0.95) inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff;
+    transition: none;
   }
   .input-field::placeholder {
     color: var(--color-text-dim);
@@ -148,7 +157,7 @@
     background-color: rgba(80, 144, 255, 0.06);
   }
 
-  /* ── Card ── */
+  /* Card */
   .card {
     background-color: var(--color-card);
     border-radius: var(--radius-lg);
@@ -162,5 +171,131 @@
     border-color: var(--color-border-2);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
+  }
+
+  /* Nav */
+  .nav-tabs {
+    @apply absolute
+           bottom-full
+           bg-nav
+           border border-nav-bd rounded-t-md border-b-0
+           flex items-center
+           gap-2 px-4 py-2
+           whitespace-nowrap;
+  }
+
+  .nav-icon {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .nav-icon i {
+    font-size: 48px;
+    transition: all 0.2s;
+  }
+  .nav-icon:hover {
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--color-border);
+  }
+  .nav-icon[data-active='true'] {
+    color: var(--color-accent);
+    background: rgba(255, 208, 0, 0.1);
+    border-color: rgba(255, 208, 0, 0.25);
+  }
+  .nav-icon[data-active='true'] i {
+    filter: drop-shadow(0 0 8px rgba(255, 208, 0, 0.8));
+  }
+  .nav-icon[data-active='true']::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--color-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--color-accent);
+  }
+
+  /* Battle center button – elevated */
+  .nav-icon[data-battle='true'] {
+    background: linear-gradient(135deg, var(--color-blue), var(--color-cyan));
+    color: #fff;
+    border: none;
+    width: 96px;
+    height: 96px;
+    border-radius: 26px;
+    box-shadow: 0 4px 20px rgba(80, 144, 255, 0.45);
+    transform: translateY(-6px);
+  }
+  .nav-icon[data-battle='true']:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 32px rgba(80, 144, 255, 0.7);
+  }
+  .nav-icon[data-battle='true'] i {
+    font-size: 56px;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--color-accent);
+    color: #1a1000;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+    box-shadow: 0 0 8px rgba(255, 208, 0, 0.5);
+  }
+  /* Tooltip */
+  .tip {
+    position: absolute;
+    bottom: calc(100% + 9px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(13, 27, 53, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--color-text);
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 9px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    letter-spacing: 0.3px;
+  }
+  .tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(13, 27, 53, 0.97);
+  }
+  .nav-icon:hover .tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }

@@ -17,7 +17,7 @@
     overflow-x: hidden;
   }
 
-  /* ── Diamond grid pattern ── */
+  /* Diamond grid pattern */
   body::before {
     content: '';
     position: fixed;
@@ -28,7 +28,7 @@
     z-index: 0;
   }
 
-  /* ── Ambient glow orbs ── */
+  /* Ambient glow orbs */
   body::after {
     content: '';
     position: fixed;
@@ -47,7 +47,6 @@
         transparent 88%
       ),
       radial-gradient(ellipse 50% 40% at 50% 42%, rgba(255, 208, 0, 0.04) 0%, transparent 75%);
-    animation: bg-drift 22s ease-in-out infinite alternate;
     pointer-events: none;
     z-index: 0;
   }
