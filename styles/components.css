@@ -1158,76 +1158,367 @@
     margin-bottom: 32px;
   }
 
-  .card {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
-    padding: 20px 18px 16px;
+  /* Browse grid — Uiverse CyberCard (00Kubi / kennyotsu, MIT) */
+  .browse-card {
     position: relative;
-    overflow: hidden;
   }
 
-  .card::before {
+  .cyber-card-container {
+    --rx: 0deg;
+    --ry: 0deg;
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    transition: 200ms;
+    perspective: 600px;
+  }
+
+  .cyber-card-container:active {
+    transform: scale(0.98);
+  }
+
+  .cyber-card-face {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    border-radius: 20px;
+    transition: 125ms ease-out;
+    background: linear-gradient(45deg, #1a1a1a, #262626);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    box-shadow:
+      0 0 20px rgba(0, 0, 0, 0.3),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+  }
+
+  .cyber-card-face::before {
     content: '';
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 255, 170, 0.1) 0%,
+      rgba(0, 162, 255, 0.05) 50%,
+      transparent 100%
+    );
+    filter: blur(20px);
+    opacity: 0;
+    width: 150%;
+    height: 150%;
     position: absolute;
-    top: 0;
-    left: -80%;
-    width: 55%;
-    height: 100%;
-    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.055), transparent);
-    transform: skewX(-20deg);
-    transition: left 0.55s ease;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.3s ease;
     pointer-events: none;
   }
 
-  .card:hover::before {
-    left: 130%;
+  .cyber-card-container:hover .cyber-card-face::before {
+    opacity: 0.8;
   }
 
-  .card:hover {
-    transform: translateY(-5px);
+  .cyber-card-container:hover .cyber-card-face {
+    filter: brightness(1.1);
+    transform: rotateX(var(--rx)) rotateY(var(--ry)) translateY(-4px);
   }
 
-  .card.tf:hover {
-    border-color: rgba(255, 112, 67, 0.6);
+  .cyber-card-glare {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      125deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 45%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 55%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    opacity: 0;
+    transition: opacity 300ms;
+    pointer-events: none;
+  }
+
+  .cyber-card-container:hover .cyber-card-glare {
+    opacity: 1;
+  }
+
+  .cyber-card-scan-line {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, rgba(92, 103, 255, 0.1), transparent);
+    transform: translateY(-100%);
+    animation: cyberScanMove 2s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes cyberScanMove {
+    0% {
+      transform: translateY(-100%);
+    }
+
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  .cyber-card-cyber-lines span {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, rgba(92, 103, 255, 0.2), transparent);
+  }
+
+  .cyber-card-cyber-lines span:nth-child(1) {
+    top: 20%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: cyberLineGrow 3s linear infinite;
+  }
+
+  .cyber-card-cyber-lines span:nth-child(2) {
+    top: 40%;
+    right: 0;
+    width: 100%;
+    height: 1px;
+    transform: scaleX(0);
+    transform-origin: right;
+    animation: cyberLineGrow 3s linear infinite 1s;
+  }
+
+  .cyber-card-cyber-lines span:nth-child(3) {
+    top: 60%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: cyberLineGrow 3s linear infinite 2s;
+  }
+
+  .cyber-card-cyber-lines span:nth-child(4) {
+    top: 80%;
+    right: 0;
+    width: 100%;
+    height: 1px;
+    transform: scaleX(0);
+    transform-origin: right;
+    animation: cyberLineGrow 3s linear infinite 1.5s;
+  }
+
+  @keyframes cyberLineGrow {
+    0% {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+
+    50% {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+
+    100% {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+  }
+
+  .cyber-card-glows {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .cyber-card-glows .glow-1,
+  .cyber-card-glows .glow-2,
+  .cyber-card-glows .glow-3 {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(0, 255, 170, 0.3) 0%, rgba(0, 255, 170, 0) 70%);
+    filter: blur(15px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .cyber-card-glows .glow-1 {
+    top: -20px;
+    left: -20px;
+  }
+
+  .cyber-card-glows .glow-2 {
+    top: 50%;
+    right: -30px;
+    transform: translateY(-50%);
+  }
+
+  .cyber-card-glows .glow-3 {
+    bottom: -20px;
+    left: 30%;
+  }
+
+  .cyber-card-container:hover .cyber-card-glows div {
+    opacity: 1;
+  }
+
+  .cyber-card-particles span {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #00ffaa;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .cyber-card-container:hover .cyber-card-particles span {
+    animation: cyberParticleFloat 2s infinite;
+  }
+
+  @keyframes cyberParticleFloat {
+    0% {
+      transform: translate(0, 0);
+      opacity: 0;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translate(calc(var(--x, 0) * 30px), calc(var(--y, 0) * 30px));
+      opacity: 0;
+    }
+  }
+
+  .cyber-card-particles span:nth-child(1) {
+    --x: 1;
+    --y: -1;
+    top: 40%;
+    left: 20%;
+  }
+
+  .cyber-card-particles span:nth-child(2) {
+    --x: -1;
+    --y: -1;
+    top: 60%;
+    right: 20%;
+  }
+
+  .cyber-card-particles span:nth-child(3) {
+    --x: 0.5;
+    --y: 1;
+    top: 20%;
+    left: 40%;
+  }
+
+  .cyber-card-particles span:nth-child(4) {
+    --x: -0.5;
+    --y: 1;
+    top: 80%;
+    right: 40%;
+  }
+
+  .cyber-card-particles span:nth-child(5) {
+    --x: 1;
+    --y: 0.5;
+    top: 30%;
+    left: 60%;
+  }
+
+  .cyber-card-particles span:nth-child(6) {
+    --x: -1;
+    --y: 0.5;
+    top: 70%;
+    right: 60%;
+  }
+
+  .cyber-card-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px 18px 16px;
+  }
+
+  .browse-card-link {
+    display: block;
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .browse-card-actions {
+    margin-top: auto;
+  }
+
+  .cyber-card-title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 8px;
+    background: linear-gradient(45deg, #00ffaa, #00a2ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 170, 0.3));
+  }
+
+  .browse-card.tf .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(255, 112, 67, 0.5);
     box-shadow:
-      0 0 30px rgba(255, 112, 67, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 30px rgba(255, 112, 67, 0.25),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
   }
 
-  .card.tw:hover {
-    border-color: rgba(66, 176, 245, 0.6);
+  .browse-card.tw .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(66, 176, 245, 0.5);
     box-shadow:
-      0 0 30px rgba(66, 176, 245, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 30px rgba(66, 176, 245, 0.25),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
   }
 
-  .card.tg:hover {
-    border-color: rgba(102, 187, 106, 0.6);
+  .browse-card.tg .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(102, 187, 106, 0.5);
     box-shadow:
-      0 0 30px rgba(102, 187, 106, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 30px rgba(102, 187, 106, 0.25),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
   }
 
-  .card.te:hover {
-    border-color: rgba(255, 215, 64, 0.6);
+  .browse-card.te .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(255, 215, 64, 0.5);
     box-shadow:
-      0 0 30px rgba(255, 215, 64, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 30px rgba(255, 215, 64, 0.25),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
   }
 
-  .card.tgh:hover {
-    border-color: rgba(171, 130, 255, 0.6);
+  .browse-card.tgh .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(171, 130, 255, 0.5);
     box-shadow:
-      0 0 30px rgba(171, 130, 255, 0.3),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 30px rgba(171, 130, 255, 0.25),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
   }
 
-  .card.tn:hover {
-    border-color: rgba(188, 170, 164, 0.4);
+  .browse-card.tn .cyber-card-container:hover .cyber-card-face {
+    border-color: rgba(188, 170, 164, 0.35);
     box-shadow:
-      0 0 24px rgba(188, 170, 164, 0.2),
-      0 8px 24px rgba(0, 0, 0, 0.5);
+      0 0 24px rgba(188, 170, 164, 0.15),
+      inset 0 0 20px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (hover: none) {
+    .cyber-card-face {
+      transform: none !important;
+    }
+
+    .cyber-card-container:active {
+      transform: none;
+    }
   }
 
   .id-tag {
@@ -1258,7 +1549,7 @@
     transition: transform 0.2s ease;
   }
 
-  .card:hover .poke-img {
+  .browse-card:hover .poke-img {
     transform: scale(1.12);
   }
 
@@ -1286,13 +1577,6 @@
     background: rgba(188, 170, 164, 0.14);
   }
 
-  .card h3 {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 8px;
-  }
 
   .badges,
   .rcard-type {
@@ -1357,6 +1641,8 @@
   }
 
   .add-btn {
+    display: block;
+    box-sizing: border-box;
     width: 100%;
     padding: 9px;
     border: 1px solid rgba(255, 208, 0, 0.3);
@@ -1366,6 +1652,7 @@
     font-size: 13px;
     color: var(--color-accent);
     text-align: center;
+    text-decoration: none;
   }
 
   .add-btn:hover:not(:disabled) {
@@ -1455,47 +1742,19 @@
 
   .roster-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 18px;
     margin-bottom: 28px;
   }
 
-  .rcard {
-    background: var(--color-card);
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
-    padding: 20px 16px 16px;
-    position: relative;
-    overflow: hidden;
-    transition:
-      transform 0.15s,
-      border-color 0.15s,
-      box-shadow 0.15s;
-  }
-
-  .rcard:hover {
-    transform: translateY(-4px);
-  }
-
-  .rcard.fire:hover {
-    border-color: rgba(255, 112, 67, 0.6);
-    box-shadow: 0 0 28px rgba(255, 112, 67, 0.3);
-  }
-
-  .rcard.electric:hover {
-    border-color: rgba(255, 215, 64, 0.6);
-    box-shadow: 0 0 28px rgba(255, 215, 64, 0.3);
-  }
-
-  .rcard.grass:hover {
-    border-color: rgba(102, 187, 106, 0.6);
-    box-shadow: 0 0 28px rgba(102, 187, 106, 0.3);
-  }
-
-  .remove-btn {
+  .roster-remove-form {
     position: absolute;
     top: 10px;
     right: 10px;
+    z-index: 2;
+  }
+
+  .roster-card .remove-btn {
     width: 28px;
     height: 28px;
     border-radius: 8px;
@@ -1503,63 +1762,62 @@
     border: 1px solid rgba(238, 51, 51, 0.3);
     color: #ff6b6b;
     font-weight: 700;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      box-shadow 0.15s;
   }
 
-  .rcard-img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 12px;
+  .roster-card .remove-btn:hover {
+    background: rgba(238, 51, 51, 0.35);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(238, 51, 51, 0.4);
   }
 
-  .rcard-img img {
-    width: 82%;
-    height: 82%;
-    object-fit: contain;
-  }
-
-  .rcard-img.fire {
-    background: rgba(255, 112, 67, 0.14);
-  }
-
-  .rcard-img.electric {
-    background: rgba(255, 215, 64, 0.14);
-  }
-
-  .rcard-img.grass {
-    background: rgba(102, 187, 106, 0.14);
-  }
-
-  .rcard-stat {
+  .roster-card .rcard-stat {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.25);
-    padding: 8px 0;
-    border-top: 1px solid var(--color-border);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 10px 0 0;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .rcard-stat span {
+  .roster-card .rcard-stat span {
     font-weight: 600;
-    color: var(--color-text-muted);
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .empty-slot {
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px dashed rgba(255, 255, 255, 0.1);
+    background: linear-gradient(45deg, #1a1a1a, #262626);
+    border: 2px dashed rgba(92, 103, 255, 0.25);
     border-radius: 20px;
-    height: 220px;
+    min-height: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.3);
     font-size: 13px;
     font-weight: 600;
+    text-decoration: none;
+    transition:
+      border-color 0.2s,
+      color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .empty-slot:hover {
+    border-color: rgba(92, 103, 255, 0.55);
+    color: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 24px rgba(92, 103, 255, 0.15);
   }
 
   .empty-plus-circle {

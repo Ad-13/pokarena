@@ -1,38 +1,12 @@
 import AutoOpenAuthModal from '@/components/ui/AutoOpenAuthModal'
-import Link from 'next/link'
-import Image from 'next/image'
-import type { CSSProperties } from 'react'
-import { getSession } from '@/actions/auth'
-import { addPokemonToRoster } from '@/actions/roster'
+import PokemonBrowser from '@/components/home/PokemonBrowser'
 import PokeballSvg from '@/components/ui/PokeballSvg'
-import { formatPokemonName, formatPokemonType, getPokemonList } from '@/lib/pokeapi'
-import { getRosterPokemonIdsByUserId, MAX_ROSTER_SIZE } from '@/lib/roster'
-import type { PokemonType } from '@/types'
-import { IconSearch, IconSparkles } from '@tabler/icons-react'
+import { getSession } from '@/actions/auth'
+import { getPokemonList } from '@/lib/pokeapi'
+import { getRosterPokemonIdsByUserId } from '@/lib/roster'
 
 interface Props {
   searchParams: Promise<{ modal?: string }>
-}
-
-function getCardToneClass(type: PokemonType): string {
-  switch (type) {
-    case 'fire':
-      return 'tf'
-    case 'water':
-      return 'tw'
-    case 'grass':
-      return 'tg'
-    case 'electric':
-      return 'te'
-    case 'ghost':
-      return 'tgh'
-    case 'flying':
-      return 'tfl'
-    case 'fighting':
-      return 'tfi'
-    default:
-      return 'tn'
-  }
 }
 
 export default async function HomePage({ searchParams }: Props) {
@@ -91,81 +65,11 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </section>
 
-      <div className="controls">
-        <div className="search-box">
-          <IconSearch size={18} />
-          <input type="text" placeholder="Search by name..." readOnly />
-        </div>
-        <div className="chips">
-          <span className="chip active">
-            <IconSparkles size={14} />
-            All
-          </span>
-        </div>
-      </div>
-
-      <section className="grid" aria-label="Pokemon list">
-        {pokemonList.map((pokemon, index) => {
-          const isInRoster = rosterIds.has(pokemon.id)
-          const isRosterFull = rosterIds.size >= MAX_ROSTER_SIZE
-          const primaryType = pokemon.types[0] ?? 'normal'
-          const cardTone = getCardToneClass(primaryType)
-
-          return (
-            <article
-              key={pokemon.id}
-              className={`card ${cardTone} stagger-item`}
-              style={{ '--index': index } as CSSProperties}
-            >
-              <Link href={`/pokemon/${pokemon.id}`}>
-                <span className="id-tag">#{pokemon.id.toString().padStart(3, '0')}</span>
-                <div className={`sprite s-${primaryType}`}>
-                  <Image
-                    src={pokemon.imageUrl}
-                    alt={formatPokemonName(pokemon.name)}
-                    width={84}
-                    height={84}
-                    className="poke-img"
-                  />
-                </div>
-                <h3>{formatPokemonName(pokemon.name)}</h3>
-                <div className="badges">
-                  {pokemon.types.map((type) => (
-                    <span key={`${pokemon.id}-${type}`} className={`badge b-${type}`}>
-                      {formatPokemonType(type)}
-                    </span>
-                  ))}
-                </div>
-              </Link>
-
-              {session ? (
-                isInRoster ? (
-                  <button type="button" className="add-btn" disabled>
-                    In Roster
-                  </button>
-                ) : isRosterFull ? (
-                  <button type="button" className="add-btn" disabled>
-                    Roster Full
-                  </button>
-                ) : (
-                  <form action={addPokemonToRoster}>
-                    <input type="hidden" name="pokemonId" value={pokemon.id} />
-                    <input type="hidden" name="pokemonName" value={pokemon.name} />
-                    <input type="hidden" name="spriteUrl" value={pokemon.imageUrl} />
-                    <button type="submit" className="add-btn">
-                      Add to Roster
-                    </button>
-                  </form>
-                )
-              ) : (
-                <Link href="/?modal=auth" className="add-btn">
-                  Sign in to add
-                </Link>
-              )}
-            </article>
-          )
-        })}
-      </section>
+      <PokemonBrowser
+        pokemonList={pokemonList}
+        isLoggedIn={Boolean(session)}
+        rosterIds={[...rosterIds]}
+      />
     </div>
   )
 }

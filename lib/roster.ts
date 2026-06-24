@@ -1,7 +1,8 @@
 import { query } from '@/lib/db'
+import { MAX_ROSTER_SIZE } from '@/lib/constants'
 import type { RosterItem } from '@/types'
 
-export const MAX_ROSTER_SIZE = 6
+export { MAX_ROSTER_SIZE } from '@/lib/constants'
 
 interface RosterRow {
   pokemon_id: number
