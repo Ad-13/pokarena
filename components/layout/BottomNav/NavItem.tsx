@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { TablerIcon } from '@tabler/icons-react'
 
@@ -11,6 +13,15 @@ interface Props {
 }
 
 export default function NavItem({ href, icon: Icon, label, isActive, isBattle, badge }: Props) {
+  function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    const battleActive = window.sessionStorage.getItem('pokarena:battle-active') === '1'
+
+    if (battleActive && href !== '/battle') {
+      event.preventDefault()
+      window.alert('Battle is in progress. End the battle before leaving this page.')
+    }
+  }
+
   return (
     <Link
       href={href}
@@ -19,6 +30,7 @@ export default function NavItem({ href, icon: Icon, label, isActive, isBattle, b
       className="nav-icon"
       data-battle={isBattle}
       data-active={isActive}
+      onClick={handleClick}
     >
       <Icon
         size={isBattle ? 60 : 54}
