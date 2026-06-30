@@ -5,7 +5,7 @@ import { getLeaderboardEntry } from '@/actions/leaderboard'
 import { getRoster } from '@/actions/roster'
 import AuthRequired from '@/components/ui/AuthRequired'
 import BattleArena from '@/components/battle/BattleArena'
-import { getRandomOpponentTeam, rosterToBattleTeam } from '@/lib/pokemon'
+import { getRandomOpponentTeam, rosterToBattleTeam } from '@/helpers/pokemon'
 
 export default async function BattlePage() {
   const session = await getSession()

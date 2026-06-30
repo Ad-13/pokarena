@@ -27,6 +27,38 @@ interface PokeApiPokemon {
   }
 }
 
+export async function getRosterPokemonIdsByUserId(userId: string): Promise<Set<number>> {
+  const rows = await query<{ pokemon_id: number }>`
+    SELECT pokemon_id
+    FROM roster_items
+    WHERE user_id = ${userId}
+  `
+
+  return new Set(rows.map((row) => row.pokemon_id))
+}
+
+export async function isPokemonInRoster(userId: string, pokemonId: number): Promise<boolean> {
+  const rows = await query<{ pokemon_id: number }>`
+    SELECT pokemon_id
+    FROM roster_items
+    WHERE user_id = ${userId}
+      AND pokemon_id = ${pokemonId}
+    LIMIT 1
+  `
+
+  return rows.length > 0
+}
+
+export async function getRosterCountByUserId(userId: string): Promise<number> {
+  const [row] = await query<{ count: string }>`
+    SELECT COUNT(*)::text AS count
+    FROM roster_items
+    WHERE user_id = ${userId}
+  `
+
+  return Number(row?.count ?? 0)
+}
+
 function formatPokemonName(name: string) {
   return name
     .split('-')
@@ -123,9 +155,7 @@ export async function removeFromRoster(formData: FormData) {
   const session = await getSession()
   if (!session) return
 
-  const id = String(formData.get('id') ?? '')
-
-  if (!id) return
+  const id = String(formData.get('id'))
 
   await query`
     DELETE FROM roster_items

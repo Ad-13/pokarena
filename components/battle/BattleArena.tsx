@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle, Clock, DoorOpen, Home, RotateCcw, Shield, Shuffle, Swords, Trophy, UserRound } from 'lucide-react'
 import { addBattleScore, createLeaderboardProfile, getCurrentLeaderboardEntry, type LeaderboardEntry } from '@/actions/leaderboard'
 import PokemonLogo from '@/components/ui/PokemonLogo'
-import type { BattleMove, BattlePokemon } from '@/lib/pokemon'
+import type { BattleMove, BattlePokemon } from '@/helpers/pokemon'
 
 type BattleStatus = 'setup' | 'player-turn' | 'opponent-turn' | 'finished'
 type BattleOutcome = 'win' | 'loss' | 'forfeit' | null
