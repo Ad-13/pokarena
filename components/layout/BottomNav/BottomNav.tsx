@@ -2,8 +2,10 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { LogIn, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logout } from '@/actions/auth'
+import BattleGuardModal from '@/components/ui/BattleGuardModal'
 import PokeballSvg from '@/components/ui/PokeballSvg'
 import NavItem from './NavItem'
 import { IconHome, IconShield, IconSword, IconTrophy } from '@tabler/icons-react'
@@ -23,10 +25,15 @@ export default function BottomNav({ rosterCount }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const { session, openModal } = useAuth()
+  const [battleGuardOpen, setBattleGuardOpen] = useState(false)
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('pokarena:battle-guard', { detail: { open: battleGuardOpen } }))
+  }, [battleGuardOpen])
 
   async function handleLogout() {
     if (window.sessionStorage.getItem('pokarena:battle-active') === '1') {
-      window.alert('Battle is in progress. End the battle before signing out.')
+      setBattleGuardOpen(true)
       return
     }
 
@@ -121,9 +128,15 @@ export default function BottomNav({ rosterCount }: Props) {
             isActive={href === '/' ? pathname === '/' : pathname.startsWith(href)}
             isBattle={href === '/battle'}
             badge={href === '/roster' ? rosterCount : undefined}
+            onNavigateBlocked={() => setBattleGuardOpen(true)}
           />
         ))}
       </div>
+
+      <BattleGuardModal
+        open={battleGuardOpen}
+        onClose={() => setBattleGuardOpen(false)}
+      />
     </nav>
   )
 }

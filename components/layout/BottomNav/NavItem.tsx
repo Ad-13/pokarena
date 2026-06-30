@@ -10,15 +10,16 @@ interface Props {
   isActive: boolean
   isBattle: boolean
   badge?: number
+  onNavigateBlocked?: () => void
 }
 
-export default function NavItem({ href, icon: Icon, label, isActive, isBattle, badge }: Props) {
+export default function NavItem({ href, icon: Icon, label, isActive, isBattle, badge, onNavigateBlocked }: Props) {
   function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     const battleActive = window.sessionStorage.getItem('pokarena:battle-active') === '1'
 
-    if (battleActive && href !== '/battle') {
+    if (battleActive) {
       event.preventDefault()
-      window.alert('Battle is in progress. End the battle before leaving this page.')
+      onNavigateBlocked?.()
     }
   }
 
