@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getSession } from '@/actions/auth'
 import { AuthModalProvider } from '@/contexts/AuthContext'
 import BottomNav from '@/components/layout/BottomNav'
+import { getRosterCountByUserId } from '@/actions/roster'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
-  const rosterCount = 0
+  const rosterCount = session ? await getRosterCountByUserId(session.id) : 0
 
   return (
     <html lang="en">

@@ -25,6 +25,11 @@ export default function BottomNav({ rosterCount }: Props) {
   const { session, openModal } = useAuth()
 
   async function handleLogout() {
+    if (window.sessionStorage.getItem('pokarena:battle-active') === '1') {
+      window.alert('Battle is in progress. End the battle before signing out.')
+      return
+    }
+
     await logout()
     router.refresh()
   }
