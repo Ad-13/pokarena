@@ -21,6 +21,15 @@ const usernameSchema = z
   .max(18, 'Username must be 18 characters or less.')
   .regex(/^[a-zA-Z0-9_-]+$/, 'Use only letters, numbers, underscores, or hyphens.')
 
+export async function getTopLeaderboard(): Promise<LeaderboardEntry[]> {
+  return query<LeaderboardEntry>`
+    SELECT id, username, user_id, score, date
+    FROM leaderboard
+    ORDER BY score DESC, date ASC
+    LIMIT 100
+  `
+}
+
 export async function getLeaderboardEntry(userId: string) {
   const rows = await query<LeaderboardEntry>`
     SELECT id, username, user_id, score, date
