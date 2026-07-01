@@ -5,149 +5,27 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Clock, DoorOpen, Home, RotateCcw, Shield, Shuffle, Swords, Trophy, UserRound } from 'lucide-react'
-import { addBattleScore, createLeaderboardProfile, getCurrentLeaderboardEntry, type LeaderboardEntry } from '@/actions/leaderboard'
+import { addBattleScore, createLeaderboardProfile, getCurrentLeaderboardEntry } from '@/actions/leaderboard'
 import PokemonLogo from '@/components/ui/PokemonLogo'
 import type { BattleMove, BattlePokemon } from '@/helpers/pokemon'
-
-type BattleStatus = 'setup' | 'player-turn' | 'opponent-turn' | 'finished'
-type BattleOutcome = 'win' | 'loss' | 'forfeit' | null
-type LogKind = 'system' | 'attack' | 'damage'
-type SelectMode = 'starter' | 'switch' | 'forced'
-
-interface BattleLogEntry {
-  id: string
-  kind: LogKind
-  text: string
-}
-
-interface Props {
-  initialLeaderboard: LeaderboardEntry | null
-  playerTeam: BattlePokemon[]
-  opponentTeam: BattlePokemon[]
-}
-
-const TURN_LIMIT = 30
-const STARTER_REVEAL_DELAY = 900
-const FAINT_ANIMATION_MS = 850
-const TYPE_EFFECTIVENESS: Record<string, Record<string, number>> = {
-  fire: { grass: 2, ice: 2, bug: 2, steel: 2, water: 0.5, rock: 0.5, fire: 0.5, dragon: 0.5 },
-  water: { fire: 2, ground: 2, rock: 2, water: 0.5, grass: 0.5, dragon: 0.5 },
-  grass: { water: 2, ground: 2, rock: 2, fire: 0.5, grass: 0.5, poison: 0.5, flying: 0.5, bug: 0.5, dragon: 0.5, steel: 0.5 },
-  electric: { water: 2, flying: 2, electric: 0.5, grass: 0.5, dragon: 0.5, ground: 0 },
-  ice: { grass: 2, ground: 2, flying: 2, dragon: 2, fire: 0.5, water: 0.5, ice: 0.5, steel: 0.5 },
-  fighting: { normal: 2, ice: 2, rock: 2, dark: 2, steel: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, fairy: 0.5, ghost: 0 },
-  ground: { fire: 2, electric: 2, poison: 2, rock: 2, steel: 2, grass: 0.5, bug: 0.5, flying: 0 },
-  flying: { grass: 2, fighting: 2, bug: 2, electric: 0.5, rock: 0.5, steel: 0.5 },
-  psychic: { fighting: 2, poison: 2, psychic: 0.5, steel: 0.5, dark: 0 },
-  bug: { grass: 2, psychic: 2, dark: 2, fire: 0.5, fighting: 0.5, poison: 0.5, flying: 0.5, ghost: 0.5, steel: 0.5, fairy: 0.5 },
-  rock: { fire: 2, ice: 2, flying: 2, bug: 2, fighting: 0.5, ground: 0.5, steel: 0.5 },
-  ghost: { psychic: 2, ghost: 2, dark: 0.5, normal: 0 },
-  dragon: { dragon: 2, steel: 0.5, fairy: 0 },
-  dark: { psychic: 2, ghost: 2, fighting: 0.5, dark: 0.5, fairy: 0.5 },
-  steel: { ice: 2, rock: 2, fairy: 2, fire: 0.5, water: 0.5, electric: 0.5, steel: 0.5 },
-  fairy: { fighting: 2, dragon: 2, dark: 2, fire: 0.5, poison: 0.5, steel: 0.5 },
-}
-
-function cloneTeam(team: BattlePokemon[]) {
-  return team.map((pokemon) => ({
-    ...pokemon,
-    hp: pokemon.maxHp,
-    moves: pokemon.moves.map((move) => ({ ...move })),
-  }))
-}
-
-function playPokemonCry(pokemon?: BattlePokemon | null) {
-  if (!pokemon?.cryUrl || typeof window === 'undefined') return
-
-  const audio = new Audio(pokemon.cryUrl)
-  audio.volume = 0.42
-  void audio.play().catch(() => {
-    // Browsers may block audio until the user interacts with the page.
-  })
-}
-
-function addLog(kind: LogKind, text: string): BattleLogEntry {
-  return { id: crypto.randomUUID(), kind, text }
-}
-
-function hpPercent(pokemon?: BattlePokemon | null) {
-  if (!pokemon) return 0
-  return Math.max(0, Math.round((pokemon.hp / pokemon.maxHp) * 100))
-}
-
-function hpColor(percent: number) {
-  if (percent > 55) return 'green'
-  if (percent > 25) return 'yellow'
-  return 'red'
-}
-
-function aliveCount(team: BattlePokemon[]) {
-  return team.filter((pokemon) => pokemon.hp > 0).length
-}
-
-function firstAliveIndex(team: BattlePokemon[]) {
-  return team.findIndex((pokemon) => pokemon.hp > 0)
-}
-
-function typeMultiplier(moveType: string, defenderTypes: string[]) {
-  return defenderTypes.reduce((total, defenderType) => {
-    return total * (TYPE_EFFECTIVENESS[moveType]?.[defenderType] ?? 1)
-  }, 1)
-}
-
-function calculateDamage(attacker: BattlePokemon, defender: BattlePokemon, move: BattleMove) {
-  const hitRoll = Math.random() * 100
-
-  if (hitRoll > move.accuracy) {
-    return { damage: 0, multiplier: 1, missed: true }
-  }
-
-  const stab = attacker.types.includes(move.type) ? 1.2 : 1
-  const multiplier = typeMultiplier(move.type, defender.types)
-  const randomFactor = 0.85 + Math.random() * 0.15
-  const raw = (((22 * move.power * (attacker.attack / Math.max(1, defender.defense))) / 50) + 2) * stab * multiplier * randomFactor
-
-  return {
-    damage: Math.max(1, Math.round(raw)),
-    multiplier,
-    missed: false,
-  }
-}
-
-function effectivenessText(multiplier: number) {
-  if (multiplier === 0) return ' It had no effect.'
-  if (multiplier >= 2) return ' It was super effective.'
-  if (multiplier < 1) return ' It was not very effective.'
-  return ''
-}
-
-function formatTime(seconds: number) {
-  const minutes = Math.floor(seconds / 60)
-  const rest = seconds % 60
-
-  return `${minutes}:${String(rest).padStart(2, '0')}`
-}
-
-function estimateDamage(attacker: BattlePokemon, defender: BattlePokemon, move: BattleMove) {
-  const stab = attacker.types.includes(move.type) ? 1.2 : 1
-  const multiplier = typeMultiplier(move.type, defender.types)
-
-  return move.power * stab * multiplier * (attacker.attack / Math.max(1, defender.defense))
-}
-
-function chooseOpponentMove(attacker: BattlePokemon, defender: BattlePokemon) {
-  const ranked = [...attacker.moves].sort((a, b) => estimateDamage(attacker, defender, b) - estimateDamage(attacker, defender, a))
-  const bestTwo = ranked.slice(0, 2)
-
-  return bestTwo[Math.floor(Math.random() * bestTwo.length)] ?? ranked[0]
-}
-
-function scoreForWin(playerTeam: BattlePokemon[], totalSeconds: number) {
-  const aliveBonus = aliveCount(playerTeam) * 75
-  const speedBonus = Math.max(0, 600 - totalSeconds)
-
-  return 250 + aliveBonus + speedBonus
-}
+import {
+  addLog,
+  aliveCount,
+  calculateDamage,
+  chooseOpponentMove,
+  cloneTeam,
+  effectivenessText,
+  firstAliveIndex,
+  formatTime,
+  hpColor,
+  hpPercent,
+  playPokemonCry,
+  playerActsFirst,
+  scoreForWin,
+  typeMultiplier,
+} from './battle-helpers'
+import { ATTACK_ANIMATION_MS, FAINT_ANIMATION_MS, STARTER_REVEAL_DELAY, TURN_LIMIT } from './battle-constants'
+import type { BattleLogEntry, BattleOutcome, BattleProps, BattleStatus, SelectMode } from './battle-types'
 
 function BattleModalPortal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
@@ -161,7 +39,7 @@ function BattleModalPortal({ children }: { children: React.ReactNode }) {
   return createPortal(children, document.body)
 }
 
-export default function BattleArena({ initialLeaderboard, playerTeam, opponentTeam }: Props) {
+export default function BattleArena({ initialLeaderboard, playerTeam, opponentTeam }: BattleProps) {
   const router = useRouter()
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard)
   const [profileState, profileAction, profilePending] = useActionState(createLeaderboardProfile, null)
@@ -171,6 +49,7 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
   const [activeOpponentIndex, setActiveOpponentIndex] = useState(0)
   const [opponentRevealed, setOpponentRevealed] = useState(false)
   const [faintingSide, setFaintingSide] = useState<'player' | 'opponent' | null>(null)
+  const [attackingSide, setAttackingSide] = useState<'player' | 'opponent' | null>(null)
   const [logs, setLogs] = useState<BattleLogEntry[]>([])
   const [status, setStatus] = useState<BattleStatus>('setup')
   const [outcome, setOutcome] = useState<BattleOutcome>(null)
@@ -179,6 +58,7 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
   const [selectMode, setSelectMode] = useState<SelectMode | null>(null)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [showForfeitConfirm, setShowForfeitConfirm] = useState(false)
+  const [battleGuardOpen, setBattleGuardOpen] = useState(false)
   const [leaderboardCheckPending, setLeaderboardCheckPending] = useState(false)
   const [scoreAwarded, setScoreAwarded] = useState(false)
   const [savedScore, setSavedScore] = useState<number | null>(null)
@@ -190,7 +70,7 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
   const activeOpponent = opponentRevealed ? battleOpponentTeam[activeOpponentIndex] : null
   const trainerLabel = leaderboard?.username ?? 'Trainer'
   const canAct = Boolean(status === 'player-turn' && activePlayer && activeOpponent && !outcome && !faintingSide)
-  const modalOpen = !leaderboard || Boolean(selectMode) || showForfeitConfirm || (status === 'finished' && Boolean(outcome))
+  const modalOpen = !leaderboard || Boolean(selectMode) || showForfeitConfirm || battleGuardOpen || (status === 'finished' && Boolean(outcome))
   const battleInProgress = status === 'player-turn' || status === 'opponent-turn' || Boolean(selectMode === 'switch' || selectMode === 'forced')
   const trainerNameChecks = [
     {
@@ -261,6 +141,19 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
 
     window.sessionStorage.removeItem('pokarena:battle-active')
   }, [battleInProgress])
+
+  useEffect(() => {
+    function syncBattleGuard(event: Event) {
+      const guardEvent = event as CustomEvent<{ open?: boolean }>
+      setBattleGuardOpen(Boolean(guardEvent.detail?.open))
+    }
+
+    window.addEventListener('pokarena:battle-guard', syncBattleGuard)
+
+    return () => {
+      window.removeEventListener('pokarena:battle-guard', syncBattleGuard)
+    }
+  }, [])
 
   useEffect(() => {
     if (modalOpen || (status !== 'player-turn' && status !== 'opponent-turn')) return
@@ -377,46 +270,161 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
     return { nextTeam, logs: nextLogs, fainted: nextHp <= 0 }
   }
 
+  function playAttackAnimation(side: 'player' | 'opponent') {
+    setAttackingSide(side)
+    window.setTimeout(() => {
+      setAttackingSide((current) => (current === side ? null : current))
+    }, ATTACK_ANIMATION_MS)
+  }
+
+  function handleOpponentFainted(nextOpponentTeam: BattlePokemon[], nextLogs: BattleLogEntry[]) {
+    setBattleOpponentTeam(nextOpponentTeam)
+    setFaintingSide('opponent')
+
+    window.setTimeout(() => {
+      if (battleFinishedRef.current) return
+
+      setFaintingSide(null)
+
+      if (aliveCount(nextOpponentTeam) === 0) {
+        finishBattle('win', [
+          addLog('system', 'Victory! The opposing team has no Pokémon left.'),
+          ...nextLogs,
+        ])
+        return
+      }
+
+      const nextOpponent = firstAliveIndex(nextOpponentTeam)
+      setActiveOpponentIndex(nextOpponent)
+      setLogs([
+        addLog('system', `Opponent sent out ${nextOpponentTeam[nextOpponent].name}.`),
+        ...nextLogs,
+      ])
+      setTurnSeconds(TURN_LIMIT)
+      setStatus('player-turn')
+      playPokemonCry(nextOpponentTeam[nextOpponent])
+    }, FAINT_ANIMATION_MS)
+  }
+
+  function handlePlayerFainted(nextPlayerTeam: BattlePokemon[], nextLogs: BattleLogEntry[]) {
+    setBattlePlayerTeam(nextPlayerTeam)
+    setFaintingSide('player')
+
+    window.setTimeout(() => {
+      if (battleFinishedRef.current) return
+
+      setFaintingSide(null)
+
+      if (aliveCount(nextPlayerTeam) === 0) {
+        finishBattle('loss', [
+          addLog('system', 'Defeat. Your team has no Pokémon left.'),
+          ...nextLogs,
+        ])
+        return
+      }
+
+      setLogs([
+        addLog('system', 'Choose your next Pokémon. This forced switch does not spend your turn.'),
+        ...nextLogs,
+      ])
+      setStatus('setup')
+      void openPokemonSelect('forced')
+    }, FAINT_ANIMATION_MS)
+  }
+
   function handlePlayerAttack(move: BattleMove) {
     if (!canAct || activePlayerIndex === null) return
 
     const player = battlePlayerTeam[activePlayerIndex]
+    const opponent = activeOpponent
+
+    if (!opponent) return
+
+    const opponentMove = chooseOpponentMove(opponent, player)
+    const playerFirst = playerActsFirst(player, move, opponent, opponentMove)
+    const firstActor = playerFirst ? 'player' : 'opponent'
+    const secondActor = playerFirst ? 'opponent' : 'player'
+    let nextPlayerTeam = battlePlayerTeam
+    let nextOpponentTeam = battleOpponentTeam
     setStatus('opponent-turn')
-    const playerAttack = applyAttack(player, battleOpponentTeam, activeOpponentIndex, move, 'Your')
-    const nextLogs = [...playerAttack.logs, ...logs]
+    setTurnSeconds(TURN_LIMIT)
 
-    setBattleOpponentTeam(playerAttack.nextTeam)
+    let nextLogs = logs
 
-    if (playerAttack.fainted) {
-      setFaintingSide('opponent')
-      window.setTimeout(() => {
-        if (battleFinishedRef.current) return
+    const runPlayerAttack = () => {
+      const currentPlayer = nextPlayerTeam[activePlayerIndex]
+      const currentOpponent = nextOpponentTeam[activeOpponentIndex]
 
-        setFaintingSide(null)
+      if (!currentPlayer || !currentOpponent || currentPlayer.hp <= 0 || currentOpponent.hp <= 0) return false
 
-        if (aliveCount(playerAttack.nextTeam) === 0) {
-          finishBattle('win', [
-            addLog('system', 'Victory! The opposing team has no Pokémon left.'),
-            ...nextLogs,
-          ])
-          return
-        }
+      playAttackAnimation('player')
+      const playerAttack = applyAttack(currentPlayer, nextOpponentTeam, activeOpponentIndex, move, 'Your')
+      nextOpponentTeam = playerAttack.nextTeam
+      nextLogs = [...playerAttack.logs, ...nextLogs]
 
-        const nextOpponent = firstAliveIndex(playerAttack.nextTeam)
-        setActiveOpponentIndex(nextOpponent)
-        setLogs([
-          addLog('system', `Opponent sent out ${playerAttack.nextTeam[nextOpponent].name}.`),
-          ...nextLogs,
-        ])
-        setTurnSeconds(TURN_LIMIT)
-        setStatus('player-turn')
-        playPokemonCry(playerAttack.nextTeam[nextOpponent])
-      }, FAINT_ANIMATION_MS)
+      return playerAttack.fainted
+    }
+
+    const runChosenOpponentAttack = () => {
+      const currentOpponent = nextOpponentTeam[activeOpponentIndex]
+      const currentPlayer = nextPlayerTeam[activePlayerIndex]
+
+      if (!currentOpponent || !currentPlayer || currentOpponent.hp <= 0 || currentPlayer.hp <= 0) return false
+
+      playAttackAnimation('opponent')
+      const opponentAttack = applyAttack(currentOpponent, nextPlayerTeam, activePlayerIndex, opponentMove, 'Opponent')
+      nextPlayerTeam = opponentAttack.nextTeam
+      nextLogs = [...opponentAttack.logs, ...nextLogs]
+
+      return opponentAttack.fainted
+    }
+
+    const runAttack = (actor: 'player' | 'opponent') => {
+      return actor === 'player' ? runPlayerAttack() : runChosenOpponentAttack()
+    }
+
+    const finishAfterFaint = (faintedSide: 'player' | 'opponent') => {
+      if (faintedSide === 'opponent') {
+        setBattlePlayerTeam(nextPlayerTeam)
+        handleOpponentFainted(nextOpponentTeam, nextLogs)
+        return
+      }
+
+      setBattleOpponentTeam(nextOpponentTeam)
+      handlePlayerFainted(nextPlayerTeam, nextLogs)
+    }
+
+    const finishTurn = () => {
+      setBattlePlayerTeam(nextPlayerTeam)
+      setBattleOpponentTeam(nextOpponentTeam)
+      setLogs(nextLogs)
+      setStatus('player-turn')
+      setTurnSeconds(TURN_LIMIT)
+    }
+
+    const firstFainted = runAttack(firstActor)
+
+    setBattlePlayerTeam(nextPlayerTeam)
+    setBattleOpponentTeam(nextOpponentTeam)
+    setLogs(nextLogs)
+
+    if (firstFainted) {
+      finishAfterFaint(firstActor === 'player' ? 'opponent' : 'player')
       return
     }
 
-    setLogs(nextLogs)
-    runOpponentTurn(playerAttack.nextTeam, battlePlayerTeam, activePlayerIndex, nextLogs)
+    window.setTimeout(() => {
+      if (battleFinishedRef.current) return
+
+      const secondFainted = runAttack(secondActor)
+
+      if (secondFainted) {
+        finishAfterFaint(secondActor === 'player' ? 'opponent' : 'player')
+        return
+      }
+
+      finishTurn()
+    }, STARTER_REVEAL_DELAY)
   }
 
   function runOpponentTurn(
@@ -439,40 +447,21 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
       if (battleFinishedRef.current) return
 
       const move = chooseOpponentMove(opponent, player)
+      playAttackAnimation('opponent')
       const opponentAttack = applyAttack(opponent, playerTeamOverride, playerIndexOverride, move, 'Opponent')
       const nextLogs = [...opponentAttack.logs, ...baseLogs]
 
       setBattlePlayerTeam(opponentAttack.nextTeam)
 
       if (opponentAttack.fainted) {
-        setFaintingSide('player')
-        window.setTimeout(() => {
-          if (battleFinishedRef.current) return
-
-          setFaintingSide(null)
-
-          if (aliveCount(opponentAttack.nextTeam) === 0) {
-            finishBattle('loss', [
-              addLog('system', 'Defeat. Your team has no Pokémon left.'),
-              ...nextLogs,
-            ])
-            return
-          }
-
-          setLogs([
-            addLog('system', 'Choose your next Pokémon. This forced switch does not spend your turn.'),
-            ...nextLogs,
-          ])
-          setStatus('setup')
-          void openPokemonSelect('forced')
-        }, FAINT_ANIMATION_MS)
+        handlePlayerFainted(opponentAttack.nextTeam, nextLogs)
         return
       }
 
       setLogs(nextLogs)
       setStatus('player-turn')
       setTurnSeconds(TURN_LIMIT)
-    }, 650)
+    }, STARTER_REVEAL_DELAY)
   }
 
   useEffect(() => {
@@ -542,6 +531,7 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
     setActiveOpponentIndex(0)
     setOpponentRevealed(false)
     setFaintingSide(null)
+    setAttackingSide(null)
     setLogs([])
     setStatus('setup')
     setOutcome(null)
@@ -558,7 +548,7 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
     <div className="battle-page">
       <header className="battle-header">
         <div className="battle-brand-row">
-          <PokemonLogo size="md" />
+          <PokemonLogo size="md" preventNavigation />
         </div>
 
         <div className="battle-title-copy">
@@ -593,14 +583,14 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
           <TeamStatus label="Opponent Team" tone="opponent" team={battleOpponentTeam} hidden={!opponentRevealed} />
         </div>
         <div className="battle-fighter-column player">
-          <FighterCard label={trainerLabel} side="player" pokemon={activePlayer} isFainting={faintingSide === 'player'} />
+          <FighterCard label={trainerLabel} side="player" pokemon={activePlayer} isFainting={faintingSide === 'player'} isAttacking={attackingSide === 'player'} />
         </div>
         <div className="battle-vs">
           <Swords size={28} />
           <span>VS</span>
         </div>
         <div className="battle-fighter-column opponent">
-          <FighterCard label="Opponent" side="opponent" pokemon={activeOpponent} isFainting={faintingSide === 'opponent'} />
+          <FighterCard label="Opponent" side="opponent" pokemon={activeOpponent} isFainting={faintingSide === 'opponent'} isAttacking={attackingSide === 'opponent'} />
         </div>
       </section>
 
@@ -642,15 +632,15 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
                 disabled={!canAct}
                 onClick={() => handlePlayerAttack(move)}
               >
-                <span>
-                  {move.name}
+                <span className="attack-card-top">
+                  <strong>{move.name}</strong>
                   <em>{move.type}</em>
                 </span>
-                <strong>
-                  PWR {move.power}
-                  <small>ACC {move.accuracy}</small>
-                  <small>EFF x{multiplier}</small>
-                </strong>
+                <span className="attack-card-stats">
+                  <small><em>PWR</em>{move.power}</small>
+                  <small><em>ACC</em>{move.accuracy}</small>
+                  <small><em>EFF</em>x{multiplier}</small>
+                </span>
               </button>
             )
           })}
@@ -835,11 +825,13 @@ function FighterCard({
   side,
   pokemon,
   isFainting = false,
+  isAttacking = false,
 }: {
   label: string
   side: 'player' | 'opponent'
   pokemon: BattlePokemon | null | undefined
   isFainting?: boolean
+  isAttacking?: boolean
 }) {
   const percent = hpPercent(pokemon)
   const pendingFighter = !pokemon
@@ -849,7 +841,7 @@ function FighterCard({
 
   return (
     <article className={`fighter-card-shell ${side}`}>
-      <div className={`fighter-card ${side} type-${mainType}`} data-fainting={isFainting} data-hidden={pendingFighter}>
+      <div className={`fighter-card ${side} type-${mainType}`} data-attacking={isAttacking} data-fainting={isFainting} data-hidden={pendingFighter}>
         <div className="fighter-card-main">
           <div className="fighter-topline">
             <div className="fighter-label">{label}</div>
