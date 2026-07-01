@@ -34,6 +34,7 @@ export interface BattleMove {
   type: string
   power: number
   accuracy: number
+  priority: number
 }
 
 export interface BattlePokemon {
@@ -52,24 +53,24 @@ export interface BattlePokemon {
 }
 
 const MOVE_BY_TYPE: Record<string, BattleMove> = {
-  normal: { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, accuracy: 100 },
-  fire: { id: 'ember', name: 'Ember', type: 'fire', power: 40, accuracy: 100 },
-  water: { id: 'water-gun', name: 'Water Gun', type: 'water', power: 40, accuracy: 100 },
-  grass: { id: 'vine-whip', name: 'Vine Whip', type: 'grass', power: 45, accuracy: 100 },
-  electric: { id: 'thunder-shock', name: 'Thunder Shock', type: 'electric', power: 40, accuracy: 100 },
-  ice: { id: 'ice-shard', name: 'Ice Shard', type: 'ice', power: 40, accuracy: 100 },
-  fighting: { id: 'karate-chop', name: 'Karate Chop', type: 'fighting', power: 50, accuracy: 100 },
-  poison: { id: 'poison-sting', name: 'Poison Sting', type: 'poison', power: 35, accuracy: 100 },
-  ground: { id: 'mud-slap', name: 'Mud-Slap', type: 'ground', power: 40, accuracy: 100 },
-  flying: { id: 'wing-attack', name: 'Wing Attack', type: 'flying', power: 60, accuracy: 100 },
-  psychic: { id: 'confusion', name: 'Confusion', type: 'psychic', power: 50, accuracy: 100 },
-  bug: { id: 'bug-bite', name: 'Bug Bite', type: 'bug', power: 60, accuracy: 100 },
-  rock: { id: 'rock-throw', name: 'Rock Throw', type: 'rock', power: 50, accuracy: 90 },
-  ghost: { id: 'lick', name: 'Lick', type: 'ghost', power: 40, accuracy: 100 },
-  dragon: { id: 'dragon-breath', name: 'Dragon Breath', type: 'dragon', power: 60, accuracy: 100 },
-  dark: { id: 'bite', name: 'Bite', type: 'dark', power: 60, accuracy: 100 },
-  steel: { id: 'metal-claw', name: 'Metal Claw', type: 'steel', power: 50, accuracy: 95 },
-  fairy: { id: 'fairy-wind', name: 'Fairy Wind', type: 'fairy', power: 40, accuracy: 100 },
+  normal: { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, accuracy: 100, priority: 0 },
+  fire: { id: 'ember', name: 'Ember', type: 'fire', power: 40, accuracy: 100, priority: 0 },
+  water: { id: 'water-gun', name: 'Water Gun', type: 'water', power: 40, accuracy: 100, priority: 0 },
+  grass: { id: 'vine-whip', name: 'Vine Whip', type: 'grass', power: 45, accuracy: 100, priority: 0 },
+  electric: { id: 'thunder-shock', name: 'Thunder Shock', type: 'electric', power: 40, accuracy: 100, priority: 0 },
+  ice: { id: 'ice-shard', name: 'Ice Shard', type: 'ice', power: 40, accuracy: 100, priority: 1 },
+  fighting: { id: 'karate-chop', name: 'Karate Chop', type: 'fighting', power: 50, accuracy: 100, priority: 0 },
+  poison: { id: 'poison-sting', name: 'Poison Sting', type: 'poison', power: 35, accuracy: 100, priority: 0 },
+  ground: { id: 'mud-slap', name: 'Mud-Slap', type: 'ground', power: 40, accuracy: 100, priority: 0 },
+  flying: { id: 'wing-attack', name: 'Wing Attack', type: 'flying', power: 60, accuracy: 100, priority: 0 },
+  psychic: { id: 'confusion', name: 'Confusion', type: 'psychic', power: 50, accuracy: 100, priority: 0 },
+  bug: { id: 'bug-bite', name: 'Bug Bite', type: 'bug', power: 60, accuracy: 100, priority: 0 },
+  rock: { id: 'rock-throw', name: 'Rock Throw', type: 'rock', power: 50, accuracy: 90, priority: 0 },
+  ghost: { id: 'lick', name: 'Lick', type: 'ghost', power: 40, accuracy: 100, priority: 0 },
+  dragon: { id: 'dragon-breath', name: 'Dragon Breath', type: 'dragon', power: 60, accuracy: 100, priority: 0 },
+  dark: { id: 'bite', name: 'Bite', type: 'dark', power: 60, accuracy: 100, priority: 0 },
+  steel: { id: 'metal-claw', name: 'Metal Claw', type: 'steel', power: 50, accuracy: 95, priority: 0 },
+  fairy: { id: 'fairy-wind', name: 'Fairy Wind', type: 'fairy', power: 40, accuracy: 100, priority: 0 },
 }
 
 function formatPokemonName(name: string) {
@@ -86,8 +87,8 @@ function getStat(pokemon: PokeApiPokemon, statName: string) {
 function buildMoves(types: string[]): BattleMove[] {
   const typeMoves = types.map((type) => MOVE_BY_TYPE[type]).filter(Boolean)
   const fallback = MOVE_BY_TYPE.normal
-  const quick = { id: 'quick-attack', name: 'Quick Attack', type: 'normal', power: 40, accuracy: 100 }
-  const heavy = { id: 'power-strike', name: 'Power Strike', type: types[0] ?? 'normal', power: 70, accuracy: 85 }
+  const quick = { id: 'quick-attack', name: 'Quick Attack', type: 'normal', power: 40, accuracy: 100, priority: 1 }
+  const heavy = { id: 'power-strike', name: 'Power Strike', type: types[0] ?? 'normal', power: 70, accuracy: 85, priority: 0 }
   const moves = [...typeMoves, fallback, quick, heavy]
   const unique = new Map<string, BattleMove>()
 
