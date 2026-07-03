@@ -313,6 +313,10 @@ export default function BattleArena({ initialLeaderboard, playerTeam, opponentTe
     window.setTimeout(() => {
       if (battleFinishedRef.current) return
 
+      if (aliveCount(nextPlayerTeam) > 0) {
+        setActivePlayerIndex(null)
+      }
+
       setFaintingSide(null)
 
       if (aliveCount(nextPlayerTeam) === 0) {
